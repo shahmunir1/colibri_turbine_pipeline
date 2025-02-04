@@ -12,7 +12,9 @@ This project provides a data processing pipeline for analyzing wind turbine data
 
 - Statistics Calculation: Computes summary statistics (min, max, average, standard deviation) for each turbine.
 
-- Integration with Delta Lake: Stores processed data in Delta format for efficient querying and storage.
+- Data Writing: Writes the processed data to different formats like Deltalake, JDBC, Parquet, and CSV.
+
+- Persist the rejected and anomalies data to CSV for further analysis.
 
 - Scalability: Uses Apache Spark for processing large datasets.
 

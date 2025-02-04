@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "turbine-data-pipeline"
+version = "0.1.0"
+description = "A data pipeline for processing turbine data"
+requires-python = ">=3.12"
+
+authors = [
+    {name = "Muhammad Shahzad Munir", email = "shahmunir1@gmail.com"},
+]
+readme = "README.md"
+
+dependencies = [
+    "pyspark",
+    "delta-spark",
+    "logging",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "mypy",
+]
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.3.4"
+pyspark = "3.5.0"
+pytest-spark = "^0.6.0"
