@@ -67,17 +67,17 @@ def test_write_stats_data(spark,sample_df):
     writer = DataWriter()
 
     # Create the mock
-    turbine_cleaned_data_puddle_mock = Mock()
+    turbine_stats_data_puddle_mock = Mock()
 
     # Configure the mock methods
-    turbine_cleaned_data_puddle_mock.get_file_format.return_value = TableType.DELTALAKE
-    turbine_cleaned_data_puddle_mock.get_config.return_value = {
+    turbine_stats_data_puddle_mock.get_file_format.return_value = TableType.DELTALAKE
+    turbine_stats_data_puddle_mock.get_config.return_value = {
         "data_path": "./tmp/test_stats_table"
     }
-    turbine_cleaned_data_puddle_mock.get_schema.return_value = TurbineStatsDataPuddle().get_schema()
+    turbine_stats_data_puddle_mock.get_schema.return_value = TurbineStatsDataPuddle().get_schema()
 
     # Try to call the process_data method
     try:
-        writer.write_data(stats, turbine_cleaned_data_puddle_mock, mode="overwrite")
+        writer.write_data(stats, turbine_stats_data_puddle_mock, mode="overwrite")
     except Exception as e:
         pytest.fail(f"Exception was raised: {e}")  # Fail the test if any exception is raised
