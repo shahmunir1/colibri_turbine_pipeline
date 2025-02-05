@@ -1,8 +1,9 @@
-from pyspark.sql.functions import col, mean, stddev,reduce,exists,array
+from pyspark.sql.functions import col, mean, stddev,countDistinct
 from src.config.config import CONFIG
 import logging
 from pyspark.sql import DataFrame
 from pyspark.sql.utils import AnalysisException, IllegalArgumentException
+from typing import Tuple
 
 
 class DataQualityError(Exception):
@@ -22,6 +23,67 @@ class DataQuality:
         self.logger = logging.getLogger(__name__)
         self.required_columns = ["turbine_id", "power_output", "timestamp", "wind_speed", "wind_direction"]
 
+
+    def validate_data_quality(self, df) ->  Tuple[DataFrame, DataFrame]:
+        """
+        Validates the data quality of the input DataFrame.
+        """
+
+        # Validate input DataFrame
+        self._validate_dataframe(df) 
+
+        # Detect anomalies 
+        anomalies = self.detect_anomalies(df)
+
+        # Fetch rejected rows
+        rejected_rows = self.detect_rejected_rows(df)
+
+        # Validate data correctness and log if there is any issue
+        self.validate_data_correctness(df)
+
+        # Return anomalies and rejected rows
+        return anomalies, rejected_rows
+
+    def validate_data_correctness(self, df) -> DataFrame:
+        """
+        Checks if the number of unique turbine_id values is exactly 5 when grouped by filename.
+
+        Args:
+            df (DataFrame): The input PySpark DataFrame with 'filename' and 'turbine_id' columns.
+
+        Returns:
+            DataFrame: A DataFrame indicating whether each filename has exactly 5 turbine IDs.
+        """
+        try:    
+            self.logger.info(f"Validating data correctness of the data")
+            
+            # Step 1: Check if filename has exactly 5 unique turbine IDs
+            result_df = df.groupBy("filename") \
+                    .agg(countDistinct("turbine_id").alias("unique_turbine_count")) \
+                    .withColumn("is_valid", col("unique_turbine_count") == 5)
+            
+            # Collect the results to log errors for invalid cases
+            invalid_results = result_df.filter(col("is_valid") == False).collect()
+
+            # Log errors for invalid cases    
+            for row in invalid_results:
+                self.logger.error(f"Filename '{row['filename']}' has {row['unique_turbine_count']} unique turbine_ids instead of 5.")
+
+            return result_df
+
+        except AnalysisException as e:
+            error_msg = f"Spark analysis error during anomaly detection: {str(e)}"
+            self.logger.error(error_msg)
+            raise DataQualityError(error_msg) from e
+        except IllegalArgumentException as e:
+            error_msg = f"Invalid argument error during anomaly detection: {str(e)}"
+            self.logger.error(error_msg)
+            raise DataQualityError(error_msg) from e
+        except Exception as e:
+            error_msg = f"Unexpected error during anomaly detection: {str(e)}"
+            self.logger.error(error_msg)
+            raise DataQualityError(error_msg) from e    
+        
 
     def _validate_dataframe(self, df: DataFrame) -> None:
         """Validates if the input DataFrame has the required columns"""
@@ -54,10 +116,7 @@ class DataQuality:
             anomalies_df = DataQuality().detect_anomalies(df)
         """
         
-        try:
-            # Validate input DataFrame
-            self._validate_dataframe(df)     
-
+        try:    
             self.logger.info(f"Detecting anomalies and invalid rows in turbine data using threshold {CONFIG['std_dev_threshold']} standard deviations.")
             
             # Step 1: Calculate the mean and standard deviation of power output for each turbine
@@ -83,13 +142,13 @@ class DataQuality:
                 "mean_power",  # Include the calculated mean power for reference
                 "stddev_power",  # Include the calculated standard deviation for reference
                 "wind_speed", 
-                "wind_direction"
+                "wind_direction",
+                "filename",
+                "year",
+                "month",
+                "day",
+                "insert_timestamp"
             )
-            
-            if(anomalies.count() > 0):
-                self.logger.warning("Anomalies detected: %s", anomalies.count())  # Log the number of anomalies detected
-            else:  # If no anomalies are detected, log a message
-                self.logger.info("No anomalies detected.") 
             
             # Step 4: Return the anomalies and rows that have null values
             return anomalies
@@ -107,7 +166,7 @@ class DataQuality:
             raise DataQualityError(error_msg) from e
    
     
-    def detect_invalid_rows(self, df) -> DataFrame:
+    def detect_rejected_rows(self, df) -> DataFrame:
         """
         Detects all the rows having null values in turbine data based on the power output.
         
@@ -126,9 +185,6 @@ class DataQuality:
         """
 
         try:
-            # Validate input DataFrame
-            self._validate_dataframe(df)
-
             # Step 1: Identify rows with null values
             self.logger.info("Identifying rows with null values in turbine data.")  
 
@@ -142,11 +198,6 @@ class DataQuality:
 
             # Filter dataframe to get only rows with nulls
             rows_with_nulls = df.filter(combined_condition)
-
-            if(rows_with_nulls.count() > 0):
-                self.logger.warning("Rows with null values identified: %s", rows_with_nulls.count())  # Log the number of rows with null values
-            else: # If no rows with null values are identified, log a message
-                self.logger.info("No rows with null values identified.") 
         
             # Step 2: Return the rows that have null values
             return rows_with_nulls
@@ -162,3 +213,4 @@ class DataQuality:
             error_msg = f"Unexpected error during null detection: {str(e)}"
             self.logger.error(error_msg)
             raise DataQualityError(error_msg) from e
+        
