@@ -1,5 +1,4 @@
 from src import TurbineDataPipeline
-from src.config.config import CONFIG
 from src.utils.spark_manager import SparkManager
 
 class SparkPipelineManager:
@@ -33,13 +32,7 @@ class SparkPipelineManager:
         try:
             # Instantiate the TurbineDataPipeline with the active Spark session
             pipeline = TurbineDataPipeline(self.spark)
-
-            # Retrieve the number of data groups from the configuration
-            data_groups = CONFIG["data_groups"] + 1  
-
-            # Loop through each group of turbines and process them
-            for group in range(1, data_groups):  
-                pipeline.run(group)  # Run the pipeline for the current group
+            pipeline.run()  # Run the pipeline for the current group
         finally:
             # Ensure Spark session is stopped after execution to free resources
             self.spark.stop()

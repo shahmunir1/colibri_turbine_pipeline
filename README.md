@@ -29,3 +29,16 @@ This project provides a data processing pipeline for analyzing wind turbine data
 - Detect anomalies.
 
 - Write the processed data to Delta tables.
+
+### Assumptions:
+
+- The input data is in CSV format.
+
+- The data includes columns: 'timestamp', 'turbine_id', 'power_output'.
+
+- The data is partitioned by 'year', 'month', and 'day'.
+
+- The raw path always have the new files to process, meaning once the files are processed another script archives it from the raw path.
+
+- The raw path is always populated with new files to process.
+
