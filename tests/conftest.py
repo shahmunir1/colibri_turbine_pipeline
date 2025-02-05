@@ -2,6 +2,8 @@
 import pytest
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, LongType
+from pyspark.sql.functions import current_timestamp,lit,col
+from pyspark.sql.functions import current_date, year, month, dayofmonth
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -38,4 +40,10 @@ def sample_df(spark):
         StructField("wind_direction", LongType(), True),
         StructField("power_output", DoubleType(), True)
     ])
-    return spark.createDataFrame(data, schema)
+    return spark.createDataFrame(data, schema) \
+                .withColumn("year", year(current_date())) \
+                .withColumn("month", month(current_date())) \
+                .withColumn("day", dayofmonth(current_date())) \
+                .withColumn("insert_timestamp", current_timestamp()) \
+                .withColumn("filename", lit("test.csv")) \
+                .withColumn("timestamp",col("timestamp").cast("timestamp"))
