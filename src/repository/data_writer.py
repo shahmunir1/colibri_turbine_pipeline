@@ -95,7 +95,7 @@ class DataWriter:
             raise DataWriterException(f"Failed to write data: {str(e)}") from e
 
 
-    def verify_schema(self,df,expected_schema: StructType) -> bool: 
+    def verify_schema(self, df, expected_schema: StructType) -> bool: 
         """
         Verifies that the given Spark DataFrame schema matches the expected schema.
         
@@ -143,7 +143,7 @@ class DataWriter:
             if not table_path:
                 raise DataWriterException("Table path cannot be empty")
 
-            df.write.format("csv").mode(mode).save(table_path)
+            df.write.partitionBy("year","month","day").format("csv").mode(mode).save(table_path)
         except Exception as e:
             self.logger.error(f"Error writing to CSV: {str(e)}")
             raise DataWriterException(f"Failed to write to CSV: {str(e)}") from e
@@ -158,7 +158,7 @@ class DataWriter:
             if not table_path:
                 raise DataWriterException("Table path cannot be empty")
 
-            df.write.format("parquet").mode(mode).save(table_path)
+            df.write.partitionBy("year","month","day").format("parquet").mode(mode).save(table_path)
         except Exception as e:
             self.logger.error(f"Error writing to Parquet: {str(e)}")
             raise DataWriterException(f"Failed to write to Parquet: {str(e)}") from e    
@@ -175,7 +175,7 @@ class DataWriter:
                 raise DataWriterException("Table path cannot be empty")
 
             self.logger.info(f"Writing to Delta Lake at path: {table_path}")
-            df.write.format("delta").mode(mode).save(table_path)
+            df.write.partitionBy("year","month","day").format("delta").mode(mode).save(table_path)
         except Exception as e:
             self.logger.error(f"Error writing to Delta Lake: {str(e)}")
             raise DataWriterException(f"Failed to write to Delta Lake: {str(e)}") from e
