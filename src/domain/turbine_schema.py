@@ -1,6 +1,6 @@
 from enum import Enum
 from abc import ABC, abstractmethod
-from pyspark.sql.types import StructType, StructField, TimestampType, IntegerType, DoubleType
+from pyspark.sql.types import StructType, StructField, TimestampType, IntegerType, DoubleType, StringType, LongType
 
 # Enum defining supported file formats for data storage
 class TableType(Enum):
@@ -68,7 +68,7 @@ class TurbineRawPuddle(TurbinePuddle):
             StructField("timestamp", TimestampType(), True),
             StructField("turbine_id", IntegerType(), True),
             StructField("wind_speed", DoubleType(), True),
-            StructField("wind_direction", DoubleType(), True),
+            StructField("wind_direction", LongType(), True),
             StructField("power_output", DoubleType(), True)
         ])
 
@@ -96,8 +96,13 @@ class TurbineRejectedDataPuddle(TurbinePuddle):
             StructField("timestamp", TimestampType(), True),
             StructField("turbine_id", IntegerType(), True),
             StructField("wind_speed", DoubleType(), True),
-            StructField("wind_direction", DoubleType(), True),
-            StructField("power_output", DoubleType(), True)
+            StructField("wind_direction", LongType(), True),
+            StructField("power_output", DoubleType(), True),
+            StructField("year", IntegerType(), False),
+            StructField("month", IntegerType(), False),
+            StructField("day", IntegerType(), False),
+            StructField("insert_timestamp", TimestampType(), False),
+            StructField("filename", StringType(), False)
         ])
 
     def get_config(self) -> dict[str, str]:
@@ -122,11 +127,16 @@ class TurbineAnomalyDataPuddle(TurbinePuddle):
         return StructType([
             StructField("timestamp", TimestampType(), False),
             StructField("turbine_id", IntegerType(), False),
-            StructField("wind_speed", DoubleType(), False),
-            StructField("wind_direction", DoubleType(), False),
             StructField("power_output", DoubleType(), False),
             StructField("mean_power", DoubleType(), False),  # Mean power over a period
-            StructField("stddev_power", DoubleType(), False)  # Standard deviation of power
+            StructField("stddev_power", DoubleType(), False),  # Standard deviation of power
+            StructField("wind_speed", DoubleType(), False),
+            StructField("wind_direction", LongType(), False),
+            StructField("filename", StringType(), False),
+            StructField("year", IntegerType(), False),
+            StructField("month", IntegerType(), False),
+            StructField("day", IntegerType(), False),
+            StructField("insert_timestamp", TimestampType(), False)
         ])
 
     def get_config(self) -> dict[str, str]:
@@ -149,8 +159,13 @@ class TurbineCleanedDataPuddle(TurbinePuddle):
             StructField("timestamp", TimestampType(), False),
             StructField("turbine_id", IntegerType(), False),
             StructField("wind_speed", DoubleType(), False),
-            StructField("wind_direction", DoubleType(), False),
-            StructField("power_output", DoubleType(), False)
+            StructField("wind_direction", LongType(), False),
+            StructField("power_output", DoubleType(), False),
+            StructField("filename", StringType(), False),
+            StructField("year", IntegerType(), False),
+            StructField("month", IntegerType(), False),
+            StructField("day", IntegerType(), False),
+            StructField("insert_timestamp", TimestampType(), False)
         ])
 
     def get_config(self) -> dict[str, str]:
@@ -187,7 +202,11 @@ class TurbineStatsDataPuddle(TurbinePuddle):
             StructField("min_power", DoubleType(), False),
             StructField("max_power", DoubleType(), False),
             StructField("avg_power", DoubleType(), False),
-            StructField("stddev_power", DoubleType(), False)
+            StructField("stddev_power", DoubleType(), False),
+            StructField("year", IntegerType(), False),
+            StructField("month", IntegerType(), False),
+            StructField("day", IntegerType(), False),
+            StructField("insert_timestamp", TimestampType(), False)
         ])
 
     def get_config(self) -> dict[str, str]:
