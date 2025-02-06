@@ -27,9 +27,6 @@ def get_bronze_turbine_data():
             .format("cloudFiles")
             .option("cloudFiles.format", "csv")  # Modify as per actual data format
             .load(TurbineRawPuddle().get_config()['data_path'])  # Load data from the specified source path
-            .withColumn("year", year(current_date()))   # Extract year from current date
-            .withColumn("month", month(current_date())) # Extract month from current date
-            .withColumn("day", dayofmonth(current_date())) # Extract day from current date
         )
     )
 
